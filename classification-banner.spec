@@ -13,7 +13,6 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-gobject
 BuildRequires:  desktop-file-utils
 BuildRequires:  gtk3
-Requires:       xrandr
 Requires:       python3-gobject
 Requires:       gtk3
 

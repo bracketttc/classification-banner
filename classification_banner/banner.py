@@ -341,41 +341,11 @@ class DisplayBanner:
         """Launch the Classification Banner Window(s)"""
         num_monitors = self.display.get_n_monitors()
 
-        if options.hres == 0 or options.vres == 0:
-            if options.hres != 0 or options.vres != 0:
-                print("hres or vres specified, but not both, ignoring...")
+        static_resolution = options.hres != 0 and options.vres != 0
+        options.spanning = options.spanning or static_resolution
 
-            # Try Xrandr to determine primary monitor resolution
-            try:
-                screen = os.popen(  # nosec
-                    "/usr/bin/xrandr | grep ' connected ' | awk '{ print $3 }'").readlines()[0]
-                self.x = screen.split('x')[0]
-                self.y = screen.split('x')[1].split('+')[0]
-
-            except IndexError:
-                try:
-                    screen = os.popen(  # nosec
-                        "/usr/bin/xrandr | grep ' current ' | awk '{ print $8$9$10+0 }'").readlines()[0]
-                    self.x = screen.split('x')[0]
-                    self.y = screen.split('x')[1].split('+')[0]
-
-                except IndexError:
-                    try:
-                        self.screen = os.popen(  # nosec
-                            r"/usr/bin/xrandr | grep '^\*0' | awk '{ print $2$3$4 }'").readlines()[0]
-                        self.x = self.screen.split('x')[0]
-                        self.y = self.screen.split('x')[1].split('+')[0]
-
-                    except IndexError:
-                        # Fail back to GTK method
-                        self.display = Gdk.Display.get_default()
-                        self.screen = self.display.get_default_screen()
-                        self.x = self.screen.get_width()
-                        self.y = self.screen.get_height()
-        else:
-            # Resoultion Set Staticly
-            self.x = options.hres
-            self.y = options.vres
+        if not static_resolution and (options.hres != 0 or options.vres != 0):
+            print("hres or vres specified, but not both, ignoring...")
 
         if not options.spanning and num_monitors > 1:
             for monitor in range(num_monitors):
@@ -383,6 +353,13 @@ class DisplayBanner:
                 self.x_location, self.y_location, self.x, self.y = mon_geo.x, mon_geo.y, mon_geo.width, mon_geo.height
                 self.banners(options)
         else:
+            if not static_resolution:
+                self.x = self.screen.get_width()
+                self.y = self.screen.get_height()
+            else:
+                # Resolution Set Staticly
+                self.x = options.hres
+                self.y = options.vres
             self.x_location = 0
             self.y_location = 0
             self.banners(options)
